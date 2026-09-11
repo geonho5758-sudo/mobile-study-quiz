@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>스터디 퀴즈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16202b;
+  --paper:#f5f0e4;
+  --paper-deep:#e8dfc9;
+  --vermilion:#c9452f;
+  --indigo:#2f5d7c;
+  --gold:#d9a441;
+  --green:#3f7a4d;
+  --red:#c0392b;
+  --line:rgba(22,32,43,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%}
+body{
+  font-family:'Zen Maru Gothic','Gowun Dodum',system-ui,sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;-webkit-appearance:none}
+.hidden{display:none !important}
+
+/* home */
+#homeView{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;padding:2rem}
+.brand{text-align:center;line-height:1.2}
+.brand .ja{font-size:2.2rem;font-weight:900}
+.brand .ja span{color:var(--vermilion)}
+.brand .ko{margin-top:.5rem;font-size:1rem;color:rgba(22,32,43,.55)}
+.start{background:var(--ink);color:var(--paper);font-size:1.15rem;font-weight:700;padding:.9rem 2.6rem;border-radius:999px}
+.start:active{background:var(--vermilion)}
+
+/* quiz menu */
+.pageTitle{font-size:1.3rem;font-weight:900;text-align:center;padding:1.6rem 1rem .6rem}
+.quizgrid{display:grid;grid-template-columns:1fr;gap:1rem;padding:1rem 1.2rem 2rem}
+.quizcard{background:#fff;border-radius:1.2rem;padding:1.6rem 1.4rem;text-align:left;border:2px solid transparent}
+.quizcard:active{border-color:var(--vermilion)}
+.qc-title{font-size:1.3rem;font-weight:900}
+.qc-sub{font-size:.9rem;color:rgba(22,32,43,.55);margin-top:.3rem}
+
+/* levels view */
+.subbar{display:flex;align-items:center;gap:.6rem;padding:.9rem 1rem .4rem;position:sticky;top:0;background:var(--paper);z-index:15}
+.subbar button{font-size:1.4rem;width:2.4rem;height:2.4rem;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.subbar button:active{background:var(--paper-deep)}
+#levelsTitle{font-size:1.05rem;font-weight:800}
+#levelsView{padding-bottom:1.5rem}
+.levelbar{display:flex;gap:.5rem;overflow-x:auto;padding:.6rem 1rem .9rem}
+.leveltab{
+  flex-shrink:0;padding:.5rem 1.1rem;border-radius:999px;background:var(--paper-deep);
+  font-weight:700;font-size:.9rem;color:rgba(22,32,43,.55);
+}
+.leveltab.on{background:var(--ink);color:var(--paper)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(7.6rem,1fr));gap:.7rem;padding:0 1rem}
+.cell{
+  position:relative;background:#fff;border-radius:1rem;padding:1rem .8rem;text-align:left;
+  border:2px solid transparent;min-height:4.6rem;
+}
+.cell.done{opacity:.5}
+.cell.o{border-color:var(--green);opacity:1}
+.cell.x{border-color:var(--red);opacity:1}
+.cell .n{font-size:.75rem;color:rgba(22,32,43,.4);font-weight:700}
+.cell .w{font-size:1.05rem;font-weight:700;margin-top:.2rem}
+.cell .badge{
+  position:absolute;top:-.5rem;right:-.4rem;background:var(--gold);color:#4a3308;
+  font-size:.65rem;font-weight:700;padding:.15rem .5rem;border-radius:999px;
+}
+.empty{grid-column:1/-1;text-align:center;padding:3rem 1rem;color:rgba(22,32,43,.4);font-size:.95rem;line-height:1.9}
+
+/* question topbar */
+#qTopbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;background:var(--paper);border-bottom:1px solid var(--line)}
+#qTopbar button{font-size:1.5rem;width:2.6rem;height:2.6rem;display:flex;align-items:center;justify-content:center;border-radius:50%}
+#qTopbar button:active{background:var(--paper-deep)}
+#qTopbarLabel{font-size:.9rem;font-weight:700;color:rgba(22,32,43,.6)}
+
+/* question view */
+#questionView{padding:1.4rem 1.1rem 6rem}
+.card{background:#fff;border-radius:1.2rem;padding:1.6rem 1.3rem;display:flex;flex-direction:column;gap:1.3rem}
+
+.pic-wrap{background:var(--paper-deep);border-radius:.9rem;min-height:12rem;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pic-wrap img{max-width:100%;max-height:16rem;object-fit:contain}
+.pic-wrap .ph{color:rgba(22,32,43,.35);font-size:.9rem;text-align:center;padding:1.5rem}
+.hint{background:var(--paper);border-radius:.8rem;padding:.9rem 1rem;font-size:1rem;font-weight:500;border-left:6px solid var(--gold)}
+.hint .tag{display:block;font-size:.65rem;color:rgba(22,32,43,.45);font-weight:700;margin-bottom:.2em}
+.tapline{text-align:center;font-size:.85rem;color:rgba(22,32,43,.4);padding:.3rem;text-decoration:underline}
+.answer{background:var(--ink);color:var(--paper);border-radius:1rem;padding:1.3rem;text-align:center}
+.answer .jp{font-size:1.9rem;font-weight:900}
+.answer .rd{font-size:1rem;color:var(--gold);margin-top:.3rem;font-weight:700}
+.answer .ko{font-size:.9rem;color:rgba(245,240,228,.7);margin-top:.2rem}
+
+.sentence{font-family:'Nanum Myeongjo',serif;font-size:1.35rem;line-height:1.9;text-align:center}
+.sentence .blank{display:inline-block;min-width:2.4em;border-bottom:3px solid var(--gold);color:var(--gold);font-weight:700;text-align:center}
+.meaning{font-size:.95rem;color:rgba(22,32,43,.55);text-align:center}
+.options{display:grid;grid-template-columns:1fr;gap:.7rem}
+.opt{background:var(--paper);border-radius:.8rem;padding:.9rem 1rem;font-size:1.05rem;font-weight:700;text-align:left;border:2px solid transparent;display:flex;gap:.6rem}
+.opt .num{font-size:.75em;color:rgba(22,32,43,.4);font-weight:900}
+.opt.correct{background:#e2f0e4;border-color:var(--green);color:#2b5c37}
+.opt.wrong-picked{background:#f7e3e0;border-color:var(--red);color:#8a2f22}
+.opt.wrong{opacity:.45}
+.note,.grammar{font-size:.9rem;line-height:1.7;padding-top:.6rem;border-top:1px solid var(--line)}
+
+.wordcheck{padding:0 1rem 1rem}
+.wc-caption{font-size:.8rem;color:rgba(22,32,43,.5);margin-bottom:.5rem}
+.wc-row{display:flex;gap:.6rem;flex-wrap:wrap}
+.wc-item{display:flex;align-items:center;gap:.4rem;background:var(--paper);border-radius:.7rem;padding:.6rem .9rem;font-size:.95rem;font-weight:700;color:rgba(22,32,43,.5)}
+.wc-item.on{background:var(--paper-deep);color:var(--ink)}
+.wc-item input{width:1.1rem;height:1.1rem}
+.wordgiven{display:flex;flex-direction:column;gap:.6rem}
+.wg-item{display:flex;justify-content:space-between;align-items:center;background:var(--paper);border-radius:.8rem;padding:.8rem 1rem}
+.wg-label{font-size:.8rem;color:rgba(22,32,43,.5);font-weight:700}
+.wg-value{font-size:1.2rem;font-weight:700}
+.wordinputs{display:flex;flex-direction:column;gap:.7rem}
+.wi-item{display:flex;flex-direction:column;gap:.3rem}
+.wi-item label{font-size:.8rem;color:rgba(22,32,43,.5);font-weight:700}
+.wi-input{font-size:1.1rem;padding:.7rem .9rem;border-radius:.7rem;border:2px solid var(--line);background:#fff;font-family:inherit}
+.wi-input:focus{outline:none;border-color:var(--indigo)}
+.wi-item.ok .wi-answer{color:var(--green);font-weight:700}
+.wi-item.no .wi-answer{color:var(--red);font-weight:700}
+.gradebtn{background:var(--ink);color:var(--paper);font-size:1.05rem;font-weight:700;padding:.9rem;border-radius:.9rem;text-align:center}
+.gradebtn:active{background:var(--vermilion)}
+.note b,.grammar b{font-weight:900}
+.grammar{color:var(--indigo)}
+
+.selfcheck{display:none;gap:.8rem;margin-top:1.2rem}
+.selfcheck.show{display:flex}
+.selfcheck button{flex:1;padding:.9rem;border-radius:.9rem;font-weight:700;font-size:1rem;text-align:center}
+.selfcheck .o{background:#e2f0e4;color:#2b5c37}
+.selfcheck .x{background:#f7e3e0;color:#8a2f22}
+.selfcheck button.picked{outline:3px solid currentColor}
+
+#bottomnav{
+  position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid var(--line);
+  padding:.6rem 1rem calc(.6rem + env(safe-area-inset-bottom));z-index:20;
+}
+#bottomnav button{flex:1;padding:.7rem .4rem;font-size:.85rem;font-weight:700;border-radius:.7rem;text-align:center}
+#bottomnav button:disabled{opacity:.3}
+#bottomnav button:active:not(:disabled){background:var(--paper-deep)}
+</style>
+</head>
+<body>
+
+<section id="homeView">
+  <div class="brand">
+    <div class="ja">スタディ<span>クイズ</span></div>
+    <div class="ko">일본어 스터디 문제 풀이</div>
+  </div>
+  <button class="start" id="enterBtn">시작하기</button>
+</section>
+
+<section id="quizmenuView" class="hidden">
+  <h1 class="pageTitle">퀴즈 선택</h1>
+  <div class="quizgrid">
+    <button class="quizcard" data-g="picture">
+      <div class="qc-title">그림퀴즈</div>
+      <div class="qc-sub">한자를 그림으로 맞혀요</div>
+    </button>
+    <button class="quizcard" data-g="jlpt">
+      <div class="qc-title">JLPT퀴즈</div>
+      <div class="qc-sub">빈칸에 알맞은 단어 찾기</div>
+    </button>
+    <button class="quizcard" data-g="word">
+      <div class="qc-title">단어퀴즈</div>
+      <div class="qc-sub">한자·요미가나·뜻 중 원하는 것만 골라 맞히기</div>
+    </button>
+  </div>
+</section>
+
+<section id="levelsView" class="hidden">
+  <div class="subbar"><button id="levelsBack" aria-label="뒤로가기">‹</button><div id="levelsTitle"></div></div>
+  <div class="levelbar" id="levelbar"></div>
+  <div class="wordcheck hidden" id="levelWordCheck"></div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<header id="qTopbar" class="hidden">
+  <button id="hamburger" aria-label="메뉴">≡</button>
+  <div id="qTopbarLabel"></div>
+</header>
+<section id="questionView" class="hidden">
+  <div class="card" id="qCard"></div>
+  <div class="selfcheck" id="selfcheck">
+    <button class="o" data-r="o">⭕ 맞았어요</button>
+    <button class="x" data-r="x">❌ 틀렸어요</button>
+  </div>
+</section>
+<nav id="bottomnav" class="hidden">
+  <button id="prevBtn">‹ 이전문제</button>
+  <button id="listBtn">문제목록</button>
+  <button id="nextBtn">다음문제 ›</button>
+</nav>
+
+<script src="picture-questions.js"></script>
+<script src="jlpt-questions.js"></script>
+<script src="word-questions.js"></script>
+<script>
+/* ============== 계층 depth 상수 ==============
+   home(0) → quizmenu(1) → levels(2) → question(3)
+   화면 이동은 전부 이 값 그대로 pushState 하고, 점프가 필요하면
+   현재 depth - 목표 depth 만큼 history.go(-n) 해서 실제 브라우저 히스토리도 깔끔하게 유지함 */
+const DEPTH = {home:0, quizmenu:1, levels:2, question:3};
+
+let game = null, level = null, cur = null, hintStep = 0, jlptOpen = false, selectedIndex = null;
+let wordChecked = {word:false, reading:false, meaning:true};
+let wordGraded = false, wordInputs = {}, wordResults = {};
+const doneSet = new Set();
+const selfChecks = {};   // id -> 'o' | 'x' (새로고침하면 초기화됨 — 실제 배포시 localStorage로 교체 가능)
+
+const $ = id => document.getElementById(id);
+/* 데이터 파일 중 하나가 안 실려도(파일 누락·404·아직 미연결) 전체 앱이 멈추지 않도록 안전 처리
+   — typeof 체크라서 변수 자체가 선언 안 돼 있어도(ReferenceError) 에러 없이 빈 배열로 대체됨 */
+const SAFE_PICTURE = typeof PICTURE_QUESTIONS !== 'undefined' ? PICTURE_QUESTIONS : [];
+const SAFE_JLPT = typeof JLPT_QUESTIONS !== 'undefined' ? JLPT_QUESTIONS : [];
+const SAFE_WORD = typeof WORD_QUESTIONS !== 'undefined' ? WORD_QUESTIONS : [];
+function dataFor(g){ return g === 'picture' ? SAFE_PICTURE : g === 'jlpt' ? SAFE_JLPT : SAFE_WORD; }
+function gameTitle(g){ return g === 'picture' ? '그림퀴즈' : g === 'jlpt' ? 'JLPT퀴즈' : '단어퀴즈'; }
+function normSpace(s){ return (s || '').replace(/[\s　]+/g, '').trim(); }
+function matchExact(input, correct){ return normSpace(input) !== '' && normSpace(input) === normSpace(correct); }
+function matchLoose(input, correct){
+  const inp = normSpace(input);
+  if(!inp) return false;
+  const candidates = (correct || '').split(/[,\/·、]/).map(s => normSpace(s.replace(/\(.*?\)/g, '')));
+  return candidates.some(c => c && (c === inp || c.includes(inp) || inp.includes(c)));
+}
+function levelsFor(g){ return [...new Set(dataFor(g).map(q => q.level))]; }
+function poolFor(g, lv){ return dataFor(g).filter(q => q.level === lv); }
+function maxBatch(g){ return Math.max(...dataFor(g).map(q => q.batch || 1)); }
+
+function jumpTo(targetDepth){
+  try{
+    const curDepth = (history.state && typeof history.state.depth === 'number') ? history.state.depth : 0;
+    const diff = curDepth - targetDepth;
+    if(diff > 0) history.go(-diff);
+  } catch(e){ /* history API가 막힌 환경(샌드박스 미리보기 등) — 아래에서 직접 화면 전환 */ }
+  if(targetDepth === DEPTH.home) showHome();
+  else if(targetDepth === DEPTH.quizmenu) showQuizMenu();
+  else if(targetDepth === DEPTH.levels) showLevels(game);
+}
+function safePush(state){ try{ history.pushState(state, ''); }catch(e){} }
+function safeReplace(state){ try{ history.replaceState(state, ''); }catch(e){} }
+
+/* ============== 화면 전환 ============== */
+function hideAll(){
+  $('homeView').classList.add('hidden');
+  $('quizmenuView').classList.add('hidden');
+  $('levelsView').classList.add('hidden');
+  $('qTopbar').classList.add('hidden');
+  $('questionView').classList.add('hidden');
+  $('bottomnav').classList.add('hidden');
+}
+function showHome(){ hideAll(); $('homeView').classList.remove('hidden'); }
+function showQuizMenu(){ hideAll(); $('quizmenuView').classList.remove('hidden'); }
+function showLevels(g){
+  hideAll();
+  game = g;
+  const levels = levelsFor(g);
+  if(!level || !levels.includes(level)) level = levels[0];
+  $('levelsView').classList.remove('hidden');
+  $('levelsTitle').textContent = gameTitle(g);
+  renderLevelTabs();
+  renderGrid();
+  renderLevelWordCheck();
+}
+function renderLevelWordCheck(){
+  const box = $('levelWordCheck');
+  if(game !== 'word'){ box.classList.add('hidden'); box.innerHTML = ''; return; }
+  box.classList.remove('hidden');
+  const FIELDS = ['word', 'reading', 'meaning'];
+  const LABEL = {word:'한자', reading:'요미가나', meaning:'뜻'};
+  box.innerHTML =
+    '<div class="wc-caption">체크한 항목을 보여주고, 안 체크한 항목을 맞혀요 (최소 1개·최대 2개)</div>' +
+    '<div class="wc-row">' + FIELDS.map(f =>
+      '<label class="wc-item' + (wordChecked[f] ? ' on' : '') + '"><input type="checkbox" data-f="' + f + '"' + (wordChecked[f] ? ' checked' : '') + '>' + LABEL[f] + '</label>'
+    ).join('') + '</div>';
+  document.querySelectorAll('#levelWordCheck input').forEach(cb => cb.onchange = () => {
+    const f = cb.dataset.f;
+    const checkedCount = FIELDS.filter(x => wordChecked[x]).length;
+    if(cb.checked && checkedCount >= 2){ cb.checked = false; return; }
+    if(!cb.checked && checkedCount <= 1){ cb.checked = true; return; }
+    wordChecked[f] = cb.checked;
+    renderLevelWordCheck();
+  });
+}
+function showQuestionScreen(){
+  hideAll();
+  $('qTopbar').classList.remove('hidden');
+  $('questionView').classList.remove('hidden');
+  $('bottomnav').classList.remove('hidden');
+  $('qTopbarLabel').textContent = gameTitle(game) + ' · ' + level;
+  renderQuestion();
+}
+
+/* ============== 레벨/그리드 렌더 ============== */
+function renderLevelTabs(){
+  const levels = levelsFor(game);
+  $('levelbar').innerHTML = levels.map(lv =>
+    '<button class="leveltab' + (lv === level ? ' on' : '') + '" data-lv="' + lv + '">' + lv + '</button>'
+  ).join('');
+}
+function renderGrid(){
+  const pool = poolFor(game, level);
+  const mb = maxBatch(game);
+  $('grid').innerHTML = pool.length ? pool.map((q, i) => {
+    const state = selfChecks[q.id];
+    const cls = state ? ' done ' + state : (doneSet.has(q.id) ? ' done' : '');
+    const badge = q.batch === mb ? '<span class="badge">NEW</span>' : '';
+    return '<button class="cell' + cls + '" data-id="' + q.id + '">' + badge +
+      '<span class="n">' + (i + 1) + '</span><div class="w">문제 ' + (i + 1) + '</div></button>';
+  }).join('') : '<div class="empty">이 급수에 등록된 문제가 없어요</div>';
+}
+
+/* ============== 문제 풀이 렌더 ============== */
+function renderQuestion(){
+  const pool = poolFor(game, level);
+  const idx = pool.indexOf(cur);
+  $('prevBtn').disabled = idx <= 0;
+  $('nextBtn').disabled = idx >= pool.length - 1;
+
+  if(game === 'picture') renderPictureQuestion();
+  else if(game === 'jlpt') renderJlptQuestion();
+  else renderWordQuestion();
+
+  if(game === 'word'){
+    $('selfcheck').classList.remove('show');
+  } else {
+    const answered = game === 'picture' ? hintStep > cur.hints.length : jlptOpen;
+    $('selfcheck').classList.toggle('show', answered);
+    document.querySelectorAll('.selfcheck button').forEach(b =>
+      b.classList.toggle('picked', selfChecks[cur.id] === b.dataset.r));
+  }
+}
+function renderPictureQuestion(){
+  const opened = hintStep > cur.hints.length;
+  let html = '<div class="pic-wrap">' +
+    (cur.image ? '<img src="' + cur.image + '" alt="" onerror="this.parentElement.innerHTML=\'<div class=&quot;ph&quot;>이미지 파일을 못 찾았어요<br>경로·파일명을 확인해주세요</div>\'">' : '<div class="ph">이미지 없음<br>image 경로를 연결해주세요</div>') +
+    '</div>';
+  cur.hints.forEach((h, i) => { if(hintStep > i) html += '<div class="hint"><span class="tag">힌트 ' + (i + 1) + '</span>' + h + '</div>'; });
+  if(!opened){
+    html += '<button class="tapline" id="tapHint">탭해서 ' + (hintStep < cur.hints.length ? '힌트 보기' : '정답 보기') + '</button>';
+  } else {
+    html += '<div class="answer"><div class="jp">' + cur.word + '</div><div class="rd">' + (cur.reading || '') + '</div><div class="ko">' + (cur.meaning || '') + '</div></div>';
+    doneSet.add(cur.id);
+  }
+  $('qCard').innerHTML = html;
+  const tap = $('tapHint');
+  if(tap) tap.onclick = () => { hintStep++; renderQuestion(); };
+}
+function renderJlptQuestion(){
+  const sentenceHtml = jlptOpen ? cur.full : cur.sentence.replace('＿＿', '<span class="blank">＿＿</span>');
+  $('qCard').innerHTML =
+    '<div class="sentence">' + sentenceHtml + '</div>' +
+    '<div class="meaning">' + (cur.meaning || '') + '</div>' +
+    '<div class="options">' + cur.options.map((o, i) =>
+      '<button class="opt' + (jlptOpen ? (i === cur.answer ? ' correct' : (i === selectedIndex ? ' wrong-picked' : ' wrong')) : '') + '" data-i="' + i + '">' +
+      '<span class="num">' + (i + 1) + '</span>' + (jlptOpen && i === cur.answer ? '<ruby>' + o.text + '<rt>' + o.reading + '</rt></ruby>' : o.text) +
+      '</button>').join('') + '</div>' +
+    (jlptOpen ? '<div class="note"><b>한자 포인트</b> ' + (cur.note || '-') + '</div>' : '') +
+    (jlptOpen && cur.grammar ? '<div class="grammar"><b>문법 포인트</b> ' + cur.grammar + '</div>' : '');
+  if(!jlptOpen){
+    document.querySelectorAll('.opt').forEach(b => b.onclick = () => { selectedIndex = Number(b.dataset.i); jlptOpen = true; renderQuestion(); });
+  } else {
+    doneSet.add(cur.id);
+  }
+}
+function renderWordQuestion(){
+  const FIELDS = ['word', 'reading', 'meaning'];
+  const LABEL = {word:'한자', reading:'요미가나', meaning:'뜻'};
+  const shown = FIELDS.filter(f => wordChecked[f]);
+  const hidden = FIELDS.filter(f => !wordChecked[f]);
+
+  let html = '<div class="wordgiven">' + shown.map(f =>
+    '<div class="wg-item"><span class="wg-label">' + LABEL[f] + '</span><span class="wg-value">' + cur[f] + '</span></div>'
+  ).join('') + '</div>';
+
+  if(!wordGraded){
+    html += '<div class="wordinputs">' + hidden.map(f =>
+      '<div class="wi-item"><label>' + LABEL[f] + '</label><input type="text" class="wi-input" data-f="' + f + '" value="' + (wordInputs[f] || '').replace(/"/g, '&quot;') + '"></div>'
+    ).join('') + '</div>';
+    html += '<button class="gradebtn" id="gradeBtn">채점하기</button>';
+  } else {
+    html += '<div class="wordinputs">' + hidden.map(f => {
+      const ok = wordResults[f];
+      return '<div class="wi-item ' + (ok ? 'ok' : 'no') + '"><label>' + LABEL[f] + '</label>' +
+        '<div class="wi-answer">' + (ok ? '⭕ ' + (wordInputs[f] || '') : '❌ 정답: ' + cur[f]) + '</div></div>';
+    }).join('') + '</div>';
+  }
+
+  $('qCard').innerHTML = html;
+
+  if(!wordGraded){
+    document.querySelectorAll('.wi-input').forEach(inp => inp.oninput = () => { wordInputs[inp.dataset.f] = inp.value; });
+    const gradeBtn = document.getElementById('gradeBtn');
+    if(gradeBtn) gradeBtn.onclick = () => {
+      hidden.forEach(f => {
+        wordResults[f] = f === 'meaning' ? matchLoose(wordInputs[f], cur.meaning) : matchExact(wordInputs[f], cur[f]);
+      });
+      wordGraded = true;
+      const allOk = hidden.every(f => wordResults[f]);
+      selfChecks[cur.id] = allOk ? 'o' : 'x';
+      doneSet.add(cur.id);
+      renderQuestion();
+    };
+  }
+}
+
+/* ============== 이벤트 ============== */
+$('enterBtn').onclick = () => {
+  safePush({view:'quizmenu', depth:DEPTH.quizmenu});
+  showQuizMenu();
+};
+
+document.querySelectorAll('.quizcard').forEach(b => b.onclick = () => {
+  const g = b.dataset.g;
+  safePush({view:'levels', depth:DEPTH.levels, game:g});
+  showLevels(g);
+});
+
+$('levelsBack').onclick = () => jumpTo(DEPTH.quizmenu);
+
+$('levelbar').addEventListener('click', e => {
+  const b = e.target.closest('.leveltab');
+  if(!b) return;
+  level = b.dataset.lv;
+  renderLevelTabs();
+  renderGrid();
+});
+
+$('grid').addEventListener('click', e => {
+  const c = e.target.closest('.cell');
+  if(!c) return;
+  const q = dataFor(game).find(x => x.id === c.dataset.id);
+  if(!q) return;
+  cur = q; hintStep = 0; jlptOpen = false; selectedIndex = null; wordGraded = false; wordInputs = {}; wordResults = {};
+  safePush({view:'question', depth:DEPTH.question, game, id:q.id});
+  showQuestionScreen();
+});
+
+$('hamburger').onclick = () => jumpTo(DEPTH.quizmenu);
+
+$('prevBtn').onclick = () => {
+  const pool = poolFor(game, level);
+  const idx = pool.indexOf(cur);
+  if(idx > 0){
+    cur = pool[idx - 1]; hintStep = 0; jlptOpen = false; selectedIndex = null; wordGraded = false; wordInputs = {}; wordResults = {};
+    safeReplace({view:'question', depth:DEPTH.question, game, id:cur.id});
+    showQuestionScreen();
+  }
+};
+$('nextBtn').onclick = () => {
+  const pool = poolFor(game, level);
+  const idx = pool.indexOf(cur);
+  if(idx < pool.length - 1){
+    cur = pool[idx + 1]; hintStep = 0; jlptOpen = false; selectedIndex = null; wordGraded = false; wordInputs = {}; wordResults = {};
+    safeReplace({view:'question', depth:DEPTH.question, game, id:cur.id});
+    showQuestionScreen();
+  }
+};
+$('listBtn').onclick = () => jumpTo(DEPTH.levels);
+
+$('selfcheck').addEventListener('click', e => {
+  const b = e.target.closest('button[data-r]');
+  if(!b || !cur) return;
+  selfChecks[cur.id] = b.dataset.r;
+  doneSet.add(cur.id);
+  renderQuestion();
+});
+
+/* ============== 뒤로가기(popstate) ============== */
+window.addEventListener('popstate', e => {
+  const st = e.state;
+  if(!st || st.view === 'home'){ showHome(); return; }
+  if(st.view === 'quizmenu'){ showQuizMenu(); return; }
+  if(st.view === 'levels'){ showLevels(st.game); return; }
+  if(st.view === 'question'){
+    const g = st.game;
+    const q = dataFor(g).find(x => x.id === st.id);
+    if(q){ game = g; cur = q; level = q.level; hintStep = 0; jlptOpen = false; selectedIndex = null; wordGraded = false; wordInputs = {}; wordResults = {}; showQuestionScreen(); return; }
+    showQuizMenu();
+  }
+});
+
+/* ============== 초기화 ============== */
+safeReplace({view:'home', depth:DEPTH.home});
+showHome();
+</script>
+</body>
+</html>
